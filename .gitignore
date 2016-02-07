@@ -1,0 +1,9 @@
+assets/images/
+java/.idea/
+java/PeaBrain.iml
+java/out/
+java/load_images/
+java/src/support/thumbnailator/
+java/src/org.json/
+java/src/sqlite-jdbc-3.8.11.2.jar
+python/.idea/
