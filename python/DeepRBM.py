@@ -1,4 +1,5 @@
-import numpy as np;
+import numpy as np
+from scipy.special import expit
 
 #Holds the weights
 
@@ -10,153 +11,160 @@ import numpy as np;
 
 #Need to be able to update all the weights based on a gradient
 
+#----------- PROGRAM CONVENTIONS --------------
+#Weight matricies are always <num units in output> by <num units in input>
+# o o o o    layer 0 = 4
+#/\/\/\/\
+#o  o  o     layer 1 = 3
+#weight matrix 0 to 1 is 4x3, so 4 rows 3 cols
+
+#input matrices are always <num of cases> by <num of units>
+#case 1: [0,0,0,1,0]
+#case 2: [0,1,1,1,0]
+#case 3: [0,1,0,1,1]
+# matrix would be 3x5, and look exactly like that
+
 class DeepRBM:
     def __init__(self, model):
         #randomly initializa the model
         self.weights = []
         for i, count in enumerate(model):
             if i+1 < len(model):
-                self.weights.append(np.random.randn(model[i],model[i+1]))
+                #set up weight matrices, <output> by <input>
+                self.weights.append(np.random.randn(model[i+1],model[i]))
         self.model = model
 
     #Takes the input layer then samples adjacent layers from the input to the output layer
-    def sample(self, input, layerIn, layerOut):
+    def sample(self, input, layerIn, layerOut, bin = True):
         while(layerIn != layerOut):
             if(layerIn<layerOut):
-                #TODO randomly 1 or 0 based on input expit(input.dot(weights))
-                input = expit(input.dot(self.weights[layerIn]))
+                input = passForward(self.weights[layerIn], input, bin)
                 layerIn = layerIn + 1
             if(layerIn > layerOut):
                 layerIn = layerIn - 1
-                input = expit(input.dot(self.weights[layerIn].transpose()))
-        return input
+                input = passForward(self.weights[layerIn].transpose(), input, bin)
 
-        print "unimplemented method called" % self.model
+        return input
 
     # sets a weights from the given layer, from the given neuron,
     # to a given neuron in the next layer
     def setWeight(self, fromLayer, fromNeuron, toNeuron, value):
         self.weights[fromLayer][fromNeuron][toNeuron] = value;
-        return;
+
+    def setWeights(self, weights):
+        if (len(weights) != len(self.weights)):
+            raise ValueError('Weights incorrect shape');
+
+        for index in range(len(weights)):
+            if(self.weights[index].shape != weights[index].shape):
+                raise ValueError('Weights incorrect shape, '+str(weights[index].shape)+"!="+str(self.weights[index].shape))
+
+        self.weights = weights;
 
     # weights is a python array of numpy 2d arrays
-    def sumAllWeights(self, weights):
+    def addToAllWeights(self, weights):
         for i, count in enumerate(self.weights):
             self.weights[i] = self.weights[i] + weights[i];
 
     # weights is a numpy 2d array of weights
-    def sumWeights(self, weights, fromLayer):
+    def addToWeights(self, weights, fromLayer):
         self.weights[fromLayer] = self.weights[fromLayer] + weights;
 
 
+#input single dimentional array
+def binarize(input):
+    return (input > np.random.uniform(size = input.shape)).astype(float)
 
-# function visible_probability = hidden_state_to_visible_probabilities(rbm_w, hidden_state)
-# % <rbm_w> is a matrix of size <number of hidden units> by <number of visible units>
-# % <hidden_state> is a binary matrix of size <number of hidden units> by <number
-# %   of configurations that we're handling in parallel>.
-# % The returned value is a matrix of size <number of visible units> by <number
-# %  of configurations that we're handling in parallel>.
-# % This takes in the (binary) states of the hidden units, and returns the
-# %  activation probabilities of the visible units, conditional on those states.
+#inputs is <num cases> by <size input>
+#takes an array of weights <outputs> by <inputs>
+def passForward(weights, input, bin = True):
+    input = expit(input.dot(weights.transpose()))
+    if(bin):
+        input = binarize(input)
+    return input
+
+
+#input is assumed to be an array of floats with value 1 or 0 binary
+#inputs is <num of cases> by <size of input>
+#weights is <size of next layer> by <size of input>
+def cd1(weights, input):
+    units_j_0 = passForward(weights, input)
+    units_i_1 = passForward(weights.transpose(), units_j_0)
+    units_j_1 = passForward(weights, units_i_1)
+
+    grad_data = configurationGoodnessGradient(input, units_j_0)
+    grad_model = configurationGoodnessGradient(units_i_1, units_j_1)
+
+    return grad_data - grad_model
+
+
+#input is <number of cases> by <number units layer i> output is <number of cases> by <number of units layer j>
+#return value is <output (layer j)> by <input (layer i)>, same as weight matrices
+def configurationGoodnessGradient(input, output):
+    cases = input.shape[1]
+    return output.transpose().dot(input)/cases
+
+
+# #Logistic funtion
 #
+# print "expit"
+# print expit(blah.weights[0])
 #
-#   %p(h=1)=logistic(sum(vw))
-#   %rbm_w  num vis
-#   %       [* * *]
-#   %num hid[* * *]
+# print "dot prod"
+# print(blah.weights[0].dot([1, 1]))
 #
-#   % hidden_state
-#   %       num cases
-#   %       [* * * *]
-#   %num hid[* * * *]
+# print "mat mult"
+# print(blah.weights[0].dot(blah.weights[1]))
 #
+# print "Set weight"
+# blur = DeepRBM([2, 2, 2])
+# print(blur.weights)
+# blur.setWeight(0, 0, 0, 0.5)
+# blur.setWeight(0, 0, 1, 0.25)
+# blur.setWeight(0, 1, 0, 0.5)
+# blur.setWeight(0, 1, 1, 0.25)
+# blur.setWeight(1, 0, 0, 0.5)
+# blur.setWeight(1, 0, 1, 0.25)
+# blur.setWeight(1, 1, 0, 0.5)
+# blur.setWeight(1, 1, 1, 0.25)
+# print(blur.weights)
 #
-#   % visible_probability
-#   %       num cases
-#   %       [* * * *]
-#   %num vis[* * * *]
-#   %       [* * * *]
+# print "sampling"
+# print(blur.sample(np.array([0.5, 0.5]), 0, 2))
+# print(blur.sample(blur.sample(np.array([0.5, 0.5]), 0, 2), 2, 0))
 #
-#   visible_probability = logistic(rbm_w.' * hidden_state);
+# print "summing weights"
+# blar = DeepRBM([2, 2, 2])
+# bler = DeepRBM([2, 2, 2])
+# print bler.weights
+# print blar.weights
 #
-# end
-
-blah = DeepRBM([5, 2, 3])
-
-print(blah.weights)
-print(blah.weights[0])
-
-#Logistic funtion
-from scipy.special import expit
-print "expit"
-print expit(blah.weights[0])
-
-print "dot prod"
-print(blah.weights[0].dot([1, 1]))
-
-print "mat mult"
-print(blah.weights[0].dot(blah.weights[1]))
-
-print "Set weight"
-blur = DeepRBM([2, 2, 2])
-print(blur.weights)
-blur.setWeight(0, 0, 0, 0.5)
-blur.setWeight(0, 0, 1, 0.25)
-blur.setWeight(0, 1, 0, 0.5)
-blur.setWeight(0, 1, 1, 0.25)
-blur.setWeight(1, 0, 0, 0.5)
-blur.setWeight(1, 0, 1, 0.25)
-blur.setWeight(1, 1, 0, 0.5)
-blur.setWeight(1, 1, 1, 0.25)
-print(blur.weights)
-
-print "sampling"
-print(blur.sample(np.array([0.5, 0.5]), 0, 2))
-print(blur.sample(blur.sample(np.array([0.5, 0.5]), 0, 2), 2, 0))
-
-print "summing weights"
-blar = DeepRBM([2, 2, 2])
-bler = DeepRBM([2, 2, 2])
-
-print bler.weights
-print blar.weights
-
-bler.sumAllWeights(blar.weights)
-
-print bler.weights
-
-bler.sumWeights(np.array([[1,1],[1,1]]),1)
-
-print bler.weights
-
-
-
-
-def cd1(weights, data):
-    return
-# function ret = cd1(rbm_w, visible_data)
-# % <rbm_w> is a matrix of size <number of hidden units> by <number of visible units>
-# % <visible_data> is a (possibly but not necessarily binary) matrix of size <number
-# %   of visible units> by <number of data cases>
-# % The returned value is the gradient approximation produced by CD-1. It's of the
-# %  same shape as <rbm_w>.
+# print "Add to all"
+# bler.addToAllWeights(blar.weights)
+# print bler.weights
 #
-#     visible_data = sample_bernoulli(visible_data);
+# print "Add single set"
+# bler.addToWeights(np.array([[1,1],[1,1]]),1)
+# print bler.weights
 #
-#     hidden_state_0 = sample_bernoulli(visible_state_to_hidden_probabilities(rbm_w, visible_data));
-#     grad_data = configuration_goodness_gradient(visible_data, hidden_state_0);
+# print "Binarize"
+# print binarize(np.array([0.5, 0.1, 0.9]))
 #
-#     visible_state_1 = sample_bernoulli(hidden_state_to_visible_probabilities(rbm_w, hidden_state_0));
-#     %hidden_state_1 = sample_bernoulli(visible_state_to_hidden_probabilities(rbm_w, visible_state_1));
-#     hidden_state_1 = visible_state_to_hidden_probabilities(rbm_w, visible_state_1);
-#     grad_model = configuration_goodness_gradient(visible_state_1, hidden_state_1);
+# print "Pass forward"
+# print passForward(np.array([[1, 1],[0,0],[0,1]]), np.array([[1, 1, 1, 1],[1,-2, 3, -4]]), bin = False)
 #
-#     ret = grad_data - grad_model;
-#
-# end
+# print "config goodness gradient"
+# print configurationGoodnessGradient(np.array([[1.0, 1.0],[1.0,0.0]]), np.array([[1.0, 0.0, 1.0],[0.0,1.0, 1.0]]))
+# print(np.array([[1.0, 0.0, 1.0],[0.0,1.0, 1.0]]).shape)
 
-def configurationGoodness(weights, intput, output):
-    return
+
+
+
+#---------------------------------------------------------
+#may not need this
+#def configurationGoodness(weights, intput, output):
+#    return
+
 # function G = configuration_goodness(rbm_w, visible_state, hidden_state)
 # % <rbm_w> is a matrix of size <number of hidden units> by <number of visible units>
 # % <visible_state> is a binary matrix of size <number of visible units> by <number
@@ -182,47 +190,5 @@ def configurationGoodness(weights, intput, output):
 #   %       [v3c1 v3c2 v3c3 v3c4]
 #
 #   G = mean(sum(hidden_state .* (rbm_w * visible_state), 1));
-#
-# end
-
-
-
-
-def configurationGoodnessGradient(input, output):
-    return
-# function d_G_by_rbm_w = configuration_goodness_gradient(visible_state, hidden_state)
-# % <visible_state> is a binary matrix of size <number of visible units> by
-# %   <number of configurations that we're handling in parallel>.
-# % <hidden_state> is a (possibly but not necessarily binary) matrix of size
-# %   <number of hidden units> by <number of configurations that we're handling
-# %   in parallel>.
-# % You don't need the model parameters for this computation.
-# % This returns the gradient of the mean configuration goodness (negative energy,
-# %   as computed by function <configuration_goodness>) with respect to the model
-# %   parameters. Thus, the returned value is of the same shape as the model
-# %   parameters, which by the way are not provided to this function. Notice that
-# %   we're talking about the mean over data cases (as opposed to the sum over
-# %   data cases).
-#
-#   % hidden_state
-#   %       num cases
-#   %       [* * * *]
-#   %num hid[* * * *]
-#
-#
-#   % visible_state
-#   %       num cases
-#   %       [* * * *]
-#   %num vis[* * * *]
-#   %       [* * * *]
-#
-#   %d_G_by_rbm_w
-#   %       num vis
-#   %       [* * *]
-#   %num hid[* * *]
-#
-#   num_cases = size(hidden_state, 2);
-#
-#   d_G_by_rbm_w = (hidden_state * (visible_state.')) ./ num_cases;
 #
 # end
