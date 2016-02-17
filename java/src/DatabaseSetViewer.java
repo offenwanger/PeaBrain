@@ -1,16 +1,10 @@
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.AffineTransform;
 import java.awt.image.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
@@ -20,7 +14,7 @@ import java.util.List;
  */
 public class DatabaseSetViewer extends JApplet {
     public static void main(String s[]) {
-        String setName = "gray-50x50-tree";
+        String setName = "gray-40x40-face";
 
         try{
             DatabaseSetViewer viewer = new DatabaseSetViewer(setName);
@@ -48,7 +42,7 @@ public class DatabaseSetViewer extends JApplet {
     static ArrayList<TrainingCase> cases;
     static int curIndex = 0;
     DatabaseAdaptor adaptor;
-    ImageHolder holder;
+    SetViewerImageHolder holder;
 
     public DatabaseSetViewer (String setName) throws SQLException{
         adaptor = new DatabaseAdaptor();
@@ -63,10 +57,10 @@ public class DatabaseSetViewer extends JApplet {
 
     public void buildUI() {
         final JApplet frame = this;
-        holder = new ImageHolder(cases.get(curIndex));
+        holder = new SetViewerImageHolder(cases.get(curIndex));
         add("Center", holder);
 
-        final ControlBar bar = new ControlBar();
+        final SetViewerControlBar bar = new SetViewerControlBar();
 
         bar.setActionListener(new ActionListener() {
             @Override
@@ -76,7 +70,7 @@ public class DatabaseSetViewer extends JApplet {
                     curIndex = (curIndex+1)%cases.size();
                     System.out.println("Next: "+curIndex);
                     remove(holder);
-                    holder = new ImageHolder(cases.get(curIndex));
+                    holder = new SetViewerImageHolder(cases.get(curIndex));
                     add("Center", holder);
                     frame.getContentPane().validate();
                     frame.getContentPane().repaint();
@@ -86,7 +80,7 @@ public class DatabaseSetViewer extends JApplet {
                     curIndex--;
                     if(curIndex == -1) curIndex = cases.size()-1;
                     remove(holder);
-                    holder = new ImageHolder(cases.get(curIndex));
+                    holder = new SetViewerImageHolder(cases.get(curIndex));
                     add("Center", holder);
                     frame.getContentPane().validate();
                     frame.getContentPane().repaint();
@@ -125,7 +119,7 @@ public class DatabaseSetViewer extends JApplet {
 
                         curIndex = 0;
                         remove(holder);
-                        holder = new ImageHolder(cases.get(curIndex));
+                        holder = new SetViewerImageHolder(cases.get(curIndex));
                         add("Center", holder);
                         frame.getContentPane().validate();
                         frame.getContentPane().repaint();
@@ -142,13 +136,13 @@ public class DatabaseSetViewer extends JApplet {
 
 }
 
-class ControlBar extends JPanel {
+class SetViewerControlBar extends JPanel {
     Button next;
     Button delete;
     Button prev;
     ActionListener listener;
 
-    public ControlBar(){
+    public SetViewerControlBar(){
         this.setLayout(new FlowLayout());
         prev = new Button("Prev");
         this.add(prev);
@@ -170,11 +164,11 @@ class ControlBar extends JPanel {
 
 }
 
-class ImageHolder extends Component {
+class SetViewerImageHolder extends Component {
     private BufferedImage bi;
     int w, h;
 
-    public ImageHolder(TrainingCase tCase) {
+    public SetViewerImageHolder(TrainingCase tCase) {
         bi = new BufferedImage(tCase.width, tCase.height, BufferedImage.TYPE_INT_RGB);
         w = bi.getWidth(null);
         h = bi.getHeight(null);

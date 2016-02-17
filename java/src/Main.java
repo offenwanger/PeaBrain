@@ -19,26 +19,27 @@ import support.thumbnailator.*;
 public class Main {
 
     public static void main(String[] args) {
-        int imagesWidth = 50;
-        int imagesHeight = 50;
+        int imagesWidth = 40;
+        int imagesHeight = 40;
         boolean crop = false;
 
         int type = BufferedImage.TYPE_BYTE_GRAY;
         //should keep this like it is or stull won't work.
 
-        String query = "tree";
+        String query = "face";
+        String startIndex = "61"; //to get more than 10 results have to make this call multiple times incrementing this by 10
 
         String googleUrl = "https://www.googleapis.com/customsearch/v1";
         String apikey = "AIzaSyDT7BAVflA3acD1XGrzqvnG5uyXATtW6F0";
         String cxcode = "012863778237739576778%3Akci5_jubz7g";
         String colourType = "gray"; //Returns black and white, grayscale, or color images: mono, gray, and color. (string)
-        String startIndex = "1"; //to get more than 10 results have to make this call multiple times incrementing this by 10
         String searchString = googleUrl + "?q=" + query + "&cx=" + cxcode + "&imgColorType=" + colourType + "&safe=high&searchType=image&start=" + startIndex + "&key=" + apikey;
 
         String jsonResultString = "";
 
         boolean isCashed = false;
-        Path p = Paths.get(System.getProperty("user.dir") + "/assets/previousSearches.txt");
+        Path p = Paths.get(System.getProperty("user.dir") + "/../assets/previousSearches.txt");
+        System.out.print(p.toString());
         System.out.println("Loading:" + p.toAbsolutePath());
         try {
             List<String> cash = Files.readAllLines(p);
@@ -76,7 +77,7 @@ public class Main {
 
                 jsonResultString = builder.toString();
 
-                try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(System.getProperty("user.dir") + "/assets/previousSearches.txt", true)))) {
+                try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(System.getProperty("user.dir") + "/../assets/previousSearches.txt", true)))) {
                     out.println(searchString);
                     out.println(jsonResultString);
                 } catch (IOException e) {
@@ -110,8 +111,12 @@ public class Main {
                 adaptor = new DatabaseAdaptor();
                 adaptor.createTrainingSet(setName, imagesHeight,imagesWidth);
             } catch (SQLException e) {
-                print("Error with database!");
-                e.printStackTrace();
+                if(e.getMessage().contains("Cannot have duplicate set names")){
+                    print("Set in DB, adding to set");
+                } else {
+                    print("Error with database!");
+                    e.printStackTrace();
+                }
             }
 
             for (int i = 0; i < json.getJSONArray("items").length(); i++) {
@@ -158,7 +163,13 @@ public class Main {
 
                             e.printStackTrace();
                         }
-                        File outputfile = new File(System.getProperty("user.dir") + "/assets/images/" + colourType +"-"+resizedImage.getWidth()+"x"+resizedImage.getHeight()+"-"+query + i+".png");
+                        int offset = 0;
+                        try {
+                            offset = Integer.parseInt(startIndex);
+                        } catch(NumberFormatException e){
+                            print("Error in start index, not an int: "+startIndex);
+                        }
+                        File outputfile = new File(System.getProperty("user.dir") + "/../assets/images/" + colourType +"-"+resizedImage.getWidth()+"x"+resizedImage.getHeight()+"-"+query + (i+offset)+".png");
                         ImageIO.write(resizedImage, "png", outputfile);
 
 

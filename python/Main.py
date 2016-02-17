@@ -3,16 +3,16 @@ from Trainer import *
 
 from DatabaseConnector import DatabaseConnector
 networkName = "testNetwork"
-setNames = ["gray-40x40-cat"]
+setNames = ["gray-40x40-face"]
 imageHeights = 40
 imageWidths = 40
-networkShape = [1600, 500, 500]
+networkShape = [1600, 50, 50, 50]
 startOver = True;
 
 
 learningRate = 0.5
-numberItterations = 1000
-batchSize = 5
+numberItterations = 10000
+batchSize = 10
 
 dbc = DatabaseConnector()
 
@@ -27,11 +27,13 @@ if(startOver != True):
     if(n):
         rbm.setWeights(n.weights)
 
+print "Number of training cases"
+print cases.shape
+
 rbm = trainRBMs(rbm, cases, batchSize, learningRate, numberItterations);
 
 dbc.storeNetwork(networkName, rbm.weights, networkShape, imageHeights, imageWidths, trainingSets)
 
-print cases.shape
 
 dbc.dispose()
 

@@ -36,9 +36,15 @@ class DatabaseConnector:
         returnable = NetworkRow()
         returnable.id = row[0]
         returnable.name = row[1]
-        returnable.weights = json.loads(row[2])
-        for index in range(len(returnable.weights)):
-            returnable.weights[index] = np.array(returnable.weights)
+
+        returnable.weights = []
+        ws = json.loads(row[2])
+        for index in range(len(ws)):
+            returnable.weights.append(np.zeros((len(ws[index]), len(ws[index][0]))))
+            for i, weightRow in enumerate(ws[index]):
+                for j, elem in enumerate(weightRow):
+                    returnable.weights[index][i,j] = elem
+
         returnable.model = json.loads(row[3])
         returnable.imageHeight = row[4]
         returnable.imageWidth = row[5]

@@ -22,7 +22,7 @@ def trainRBMs(rbm, cases, batchSize, learningRate, numberItterations):
             rbm.weights[layer] = rbm.weights[layer] + momentumSpeed * learningRate;
             i += 1
             if(i == notificationMarker):
-                print "Trained for "+str(i)+" itterations, time taken = "+str(time.time() - timeMarker)+s;
+                print "Trained for "+str(i)+" itterations, time taken = "+str(time.time() - timeMarker)+"s";
                 timeMarker = time.time()
                 notificationMarker += 100;
 

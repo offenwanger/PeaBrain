@@ -64,6 +64,56 @@ public class DatabaseAdaptor {
 
     }
 
+    public Network getNetwork(String networkName) throws SQLException{
+        Statement stmt;
+        stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery( "SELECT * FROM networks WHERE name = '"+networkName+"'");
+        if ( rs.next() ) {
+            Network n = new Network();
+            n.id = rs.getInt("id");
+            n.name = rs.getString("name");
+            n.imageHeight = rs.getInt("image_height");
+            n.imageWidth = rs.getInt("image_width");
+            n.weights = new ArrayList<>();
+            //this is the list of layer weight matricies
+            JSONArray arr = new JSONArray(rs.getString("weights"));
+            for(int i =0;i<arr.length();i++){
+                //this is a weight matrix
+                JSONArray weights = arr.getJSONArray(i);
+                //this is a row of the matrix
+                JSONArray row = weights.getJSONArray(0);
+                double[][] dub = new double[weights.length()][row.length()];
+                for(int j =0;j<arr.length();j++){
+                    row = weights.getJSONArray(j);
+                    for(int k =0;k<arr.length();k++){
+                        dub[j][k]  = row.getDouble(k);
+                    }
+                }
+                n.weights.add(dub);
+            }
+
+            arr = new JSONArray(rs.getString("model"));
+            n.model = new int[arr.length()];
+            for(int i =0;i<arr.length();i++){
+                n.model[i] = arr.getInt(i);
+            }
+
+            arr = new JSONArray(rs.getString("training_sets"));
+            n.trainingSets = new int[arr.length()];
+            for(int i =0;i<arr.length();i++){
+                n.trainingSets[i] = arr.getInt(i);
+            }
+
+            rs.close();
+            stmt.close();
+            return n;
+        } else {
+            rs.close();
+            stmt.close();
+            return null;
+        }
+    }
+
     /**
      * Gets the dimentions for the given set, returned as int[]{width, height}
      * @param setName
