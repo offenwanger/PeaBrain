@@ -5,68 +5,43 @@ from DeepRBM import DeepRBM
 import numpy as np
 
 networkName = "testNetwork"
-layerToObserve = 2;
+layerToObserve = 3;
 
-def run():
-    # root = Tk()
-    # root.geometry('1000x1000')
-    # canvas = Canvas(root,width=999,height=999)
-    # canvas.pack()
-    # pilImage = Image.open("ball.gif")
-    # image = ImageTk.PhotoImage(pilImage)
-    # imagesprite = canvas.create_image(400,400,image=image)
-    # root.mainloop()
+canvasWidth = 1400;
+canvasHeight = 1000;
 
-    image_manip().mainloop()
+dbc = DatabaseConnector();
+network = dbc.getNetwork(networkName);
 
+rbm = DeepRBM(network.model)
+rbm.setWeights(network.weights)
 
-class image_manip(Tk):
+root = Tk()
+root.geometry(str(canvasWidth)+'x'+str(canvasHeight))
+canvas = Canvas(root,width=canvasWidth-1,height=canvasHeight-1)
+canvas.pack()
 
-    def __init__(self):
-        Tk.__init__(self)
+references = []
 
-        dbc = DatabaseConnector();
-        network = dbc.getNetwork(networkName);
+for i in range(network.model[layerToObserve]):
+    myimg = Image.new("L", (network.imageWidth, network.imageHeight), "white")
 
-        rbm = DeepRBM(network.model)
-        rbm.setWeights(network.weights)
+    input = np.zeros(network.model[layerToObserve])
+    input[i] = 1
 
-        myimg =  Image.new("L", (network.imageWidth, network.imageHeight), "white")
+    neuronWeights = rbm.sample(input, layerToObserve, 0, False);
 
-        input = np.zeros(network.model[1])
-        input[22] = 1
-        neuronWeights = rbm.sample(input, 3, 0, False);
+    myimg.putdata(neuronWeights*255)
 
-        myimg.putdata(neuronWeights*254)
+    imagesPerLine = canvasWidth/network.imageWidth - 2;
 
-        self.configure(bg='red')
+    image = ImageTk.PhotoImage(myimg)
+    imagesprite = canvas.create_image(
+        20+(network.imageWidth+2)*(i%imagesPerLine),
+        20+(network.imageHeight+2)*(i/imagesPerLine),
+        image=image)
 
-        self.ImbImage = Canvas(self, highlightthickness=0, bd=0, bg='blue')
-        self.ImbImage.pack()
+    references.append(image)
+    references.append(imagesprite)
 
-        self.i = ImageTk.PhotoImage(myimg)
-        self.ImbImage.create_image(40, 40, image=self.i)
-
-#########################################################################
-        # self.configure(bg='red')
-        # self.ImbImage = Canvas(self, highlightthickness=0, bd=0, bg='blue')
-        # self.ImbImage.pack()
-        #
-        # for i in range(network.model[layerToObserve]):
-        #     myimg = Image.new("L", (network.imageWidth, network.imageHeight), "white")
-        #
-        #     input = np.zeros(network.model[layerToObserve])
-        #     input[i] = 1
-        #     neuronWeights = rbm.sample(input, 3, 0, False);
-        #
-        #     myimg.putdata(neuronWeights*255)
-        #
-        #     self.i = ImageTk.PhotoImage(myimg)
-        #     self.ImbImage.create_image(40*(i%20), 40*(i/20), image=self.i)
-        #     print 40*(i%20)
-        #     print 40*(i/20)
-###########################################################################
-
-
-if __name__ == "__main__":
-    run()
+root.mainloop()

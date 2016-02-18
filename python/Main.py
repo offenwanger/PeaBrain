@@ -6,7 +6,7 @@ networkName = "testNetwork"
 setNames = ["gray-40x40-face"]
 imageHeights = 40
 imageWidths = 40
-networkShape = [1600, 50, 50, 50]
+networkShape = [1600, 200, 200, 200]
 startOver = True;
 
 
