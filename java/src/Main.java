@@ -26,8 +26,8 @@ public class Main {
         int type = BufferedImage.TYPE_BYTE_GRAY;
         //should keep this like it is or stull won't work.
 
-        String query = "face";
-        String startIndex = "61"; //to get more than 10 results have to make this call multiple times incrementing this by 10
+        String query = "cup";
+        String startIndex = "1"; //to get more than 10 results have to make this call multiple times incrementing this by 10
 
         String googleUrl = "https://www.googleapis.com/customsearch/v1";
         String apikey = "AIzaSyDT7BAVflA3acD1XGrzqvnG5uyXATtW6F0";
@@ -179,6 +179,9 @@ public class Main {
                     e.printStackTrace();
                 } catch (IOException e) {
                     print("Error in writing image! "+imageUrl);
+                    e.printStackTrace();
+                } catch(Exception e){
+                    print("Error! "+e.getMessage() );
                     e.printStackTrace();
                 }
             }

@@ -20,11 +20,22 @@ class TestStringMethods(unittest.TestCase):
     def test_trainRBM(self):
         rbm = DeepRBM([2, 2, 2])
         cases = np.array([[1, 1],[1, 1],[1, 1],[1, 1],[1, 1],[1, 1],[1, 1],[1, 1],[1, 1],[1, 1]])
-        rbm = trainRBMs(rbm,cases,4,0.5,1000)
+        rbm = trainRBMs(rbm,cases,4,1000)
 
         print(rbm.weights)
 
         self.assertAlmostEqual(rbm.sample(rbm.sample(np.array([1,1]), 0, 2, False), 2, 0, False)[0], 1, 4)
+
+    def test_LD1(self):
+        rbm = np.ones((2, 3));
+        rbm[:,2] = [-1,-1];
+        penalty = getLD1Penalty(rbm);
+        self.assertEqual(-1, penalty[0,0])
+        self.assertEqual(-1, penalty[1,0])
+        self.assertEqual(-1, penalty[0,1])
+        self.assertEqual(-1, penalty[1,1])
+        self.assertEqual(1, penalty[0,2])
+        self.assertEqual(1, penalty[1,2])
 
 
 

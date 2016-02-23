@@ -2,7 +2,7 @@ import numpy as np
 from DeepRBM import *
 import time
 
-def trainRBMs(rbm, cases, batchSize, learningRate, numberItterations):
+def trainRBMs(rbm, cases, batchSize, numberItterations, learningRate =0.5, momentumMultiplier = 0.9, LD1=0):
     for layer in range(len(rbm.weights)):
         momentumSpeed = np.zeros(rbm.weights[layer].shape);
         batchIndex = 0;
@@ -18,7 +18,9 @@ def trainRBMs(rbm, cases, batchSize, learningRate, numberItterations):
                 batchIndex -= cases.shape[0]
 
             gradient = cd1(rbm.weights[layer], miniBatch);
-            momentumSpeed = 0.9 * momentumSpeed + gradient;
+            if(LD1 != 0):
+                gradient = gradient + LD1*getLD1Penalty(rbm.weights[layer])
+            momentumSpeed = momentumMultiplier * momentumSpeed + gradient;
             rbm.weights[layer] = rbm.weights[layer] + momentumSpeed * learningRate;
             i += 1
             if(i == notificationMarker):
@@ -44,6 +46,12 @@ def getMiniBatch(cases, start, size):
         return cases[start:start+size,:]
 
     return np.concatenate((cases[start:,:], cases[:start+size-cases.shape[0]]), axis=0)
+
+def getLD1Penalty(weights):
+   #weights -> matrix with 1 for negative numbers and 0 for positive
+   #*2, now is mat with 2 for negative numbers,
+   #-1, now 1 for negative and -1 for positive.
+   return (weights < 0).astype(float)*2 - 1;
 
 
 # function model = optimize(model_shape, training_data, learning_rate, n_iterations)

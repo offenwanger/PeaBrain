@@ -2,18 +2,74 @@
 from Trainer import *
 
 from DatabaseConnector import DatabaseConnector
-networkName = "testNetwork"
-setNames = ["gray-40x40-face"]
+# networkName = "treeNetwork"
+# setNames = ["gray-40x40-tree"]
+# imageHeights = 40
+# imageWidths = 40
+# networkShape = [1600, 200, 200, 200]
+# learningRate = 0.5
+# momentum = 0.9;
+# numberItterations = 10000
+# batchSize = 10
+# LD1coefficient = 0.0001; #Costs an extra 1/2 second for size 100 batches from 1600 to 200, 0 for off
+
+# networkName = "testNetwork"
+# setNames = ["gray-40x40-face"]
+# imageHeights = 40
+# imageWidths = 40
+# networkShape = [1600, 200, 200, 200]
+# learningRate = 0.5
+# momentum = 0.9;
+# numberItterations = 10000
+# batchSize = 10
+# LD1coefficient = 0.0001; #Costs an extra 1/2 second for size 100 batches from 1600 to 200, 0 for off
+
+# networkName = "faceNetworkNoLD"
+# setNames = ["gray-40x40-face"]
+# imageHeights = 40
+# imageWidths = 40
+# networkShape = [1600, 200, 200, 200]
+# learningRate = 0.5
+# momentum = 0.9;
+# numberItterations = 10000
+# batchSize = 10
+# LD1coefficient = 0; #Costs an extra 1/2 second for size 100 batches from 1600 to 200, 0 for off
+
+# networkName = "cupNetwork"
+# setNames = ["gray-40x40-cup"]
+# imageHeights = 40
+# imageWidths = 40
+# networkShape = [1600, 200, 200, 200]
+# learningRate = 0.5
+# momentum = 0.9;
+# numberItterations = 10000
+# batchSize = 10
+# LD1coefficient = 0.0001; #Costs an extra 1/2 second for size 100 batches from 1600 to 200, 0 for off
+
+# networkName = "cupNetworkSmall"
+# setNames = ["gray-40x40-cup"]
+# imageHeights = 40
+# imageWidths = 40
+# networkShape = [1600, 50, 50]
+# learningRate = 0.5
+# momentum = 0.9;
+# numberItterations = 10000
+# batchSize = 10
+# LD1coefficient = 0.0001; #Costs an extra 1/2 second for size 100 batches from 1600 to 200, 0 for off
+
+networkName = "treeNetworkSmall"
+setNames = ["gray-40x40-tree"]
 imageHeights = 40
 imageWidths = 40
-networkShape = [1600, 200, 200, 200]
-startOver = True;
-
-
+networkShape = [1600, 50, 50]
 learningRate = 0.5
+momentum = 0.9;
 numberItterations = 10000
 batchSize = 10
+LD1coefficient = 0.0001; #Costs an extra 1/2 second for size 100 batches from 1600 to 200, 0 for off
 
+
+startOver = True;
 dbc = DatabaseConnector()
 
 trainingSets = [dbc.getTrainingSetId(setNames[0])]
@@ -30,7 +86,7 @@ if(startOver != True):
 print "Number of training cases"
 print cases.shape
 
-rbm = trainRBMs(rbm, cases, batchSize, learningRate, numberItterations);
+rbm = trainRBMs(rbm, cases, batchSize, numberItterations, learningRate, momentum, LD1coefficient);
 
 dbc.storeNetwork(networkName, rbm.weights, networkShape, imageHeights, imageWidths, trainingSets)
 
